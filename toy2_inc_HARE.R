@@ -38,9 +38,9 @@ getTransitionMatrices('toy2d1.nt',loadpath=matpath,savepath=matpath)
 getTransitionMatrices('toy2d2.nt',loadpath=matpath,savepath=matpath)
 getTransitionMatrices('toy2d12.nt',loadpath=matpath,savepath=matpath)
 damping=0.99
-runtime = hare('toy2d1.nt',loadpath=matpath,savepath=respath, epsilon=10^-4, damping = damping, saveRData=TRUE, saveresults=FALSE, printerror=TRUE, printruntimes=TRUE)
-runtime = hare('toy2d2.nt',loadpath=matpath,savepath=respath, epsilon=10^-4, damping = damping, saveRData=TRUE, saveresults=FALSE, printerror=TRUE, printruntimes=TRUE)
-runtime = hare('toy2d12.nt',loadpath=matpath,savepath=respath, epsilon=10^-4, damping = damping, saveRData=TRUE, saveresults=FALSE, printerror=TRUE, printruntimes=TRUE)
+runtime = hare('toy2d1.nt',loadpath=matpath,savepath=respath, epsilon=10^-6, damping = damping, saveRData=TRUE, saveresults=FALSE, printerror=TRUE, printruntimes=TRUE,SnOnly=TRUE)
+runtime = hare('toy2d2.nt',loadpath=matpath,savepath=respath, epsilon=10^-6, damping = damping, saveRData=TRUE, saveresults=FALSE, printerror=TRUE, printruntimes=TRUE,SnOnly=TRUE)
+runtime = hare('toy2d12.nt',loadpath=matpath,savepath=respath, epsilon=10^-6, damping = damping, saveRData=TRUE, saveresults=FALSE, printerror=TRUE, printruntimes=TRUE,SnOnly=TRUE)
 
 ######################################################
 #Rank1
@@ -63,8 +63,8 @@ P[1,2]=extlnks1/(3*nrow(p1t)+extlnks1)
 P[2,2]=(3*nrow(p2t))/(3*nrow(p2t)+extlnks2)
 P[2,1]=extlnks2/(3*nrow(p2t)+extlnks2)
 ###---------------------------
-source('C:\\Users\\Abdelmonem\\Dropbox\\HARE\\HareSparkR\\HareSparkR\\pageRank_loop.R')
-res=pageRank_loop(P,damping=0.99,epsilon=1e-8)
+source('C:\\Users\\Abdelmonem\\Dropbox\\HARE\\incHARE\\incrementalHARE\\pageRank_loop.R')
+res=pageRank_loop(P,damping=0.99,epsilon=1e-6)
 
 rG=res[[1]]
 
@@ -155,7 +155,7 @@ approx_rG<-function(tab2,alpha){
     rMSE=res_rg[[2]]
   minRnk=mean(abs(tab4[,'incHareRank']-tab4[,'d12_order']))
   minrMSE=rMSE
-  for(lvl in 1:3){
+  for(lvl in 1:4){
       for( x in seq(x.c-x.rad,x.c+x.rad,x.res)){
             res_rg=approx_rG(tab2,x)
             tab4=res_rg[[1]]
@@ -186,15 +186,133 @@ approx_rG<-function(tab2,alpha){
  
  write.table(tab4,file='clipboard',row.names=FALSE,sep='\t')
  
- ############## old P
- # extlnks1=sum((p1t[,1]%in% ce) | (p1t[,2]%in% ce) | (p1t[,3]%in% ce) )
-# extlnks2=sum((p2t[,1]%in% ce) | (p2t[,2]%in% ce) | (p2t[,3]%in% ce) )
-# print(sprintf('np1:%d, np2:%d, ext1:%d, ext2:%d',nrow(p1t),nrow(p2t),extlnks1,extlnks2))
+######---###
+name='toy2'
 
-# extlnks=extlnks1+extlnks2
+print(load(paste0(matpath , "e2i_" , name ,"d1.RData")))
+e2i_d1=E2I
+print(load(paste0(matpath , "e2i_" , name ,"d2.RData")))
+e2i_d2=E2I
+print(load(paste0(matpath , "e2i_" , name ,"d12.RData")))
+e2i_all=E2I
 
-# P=matrix(0,2,2)
-# P[1,1]=nrow(p1t)/(nrow(p1t) + extlnks)
-# P[1,2]=extlnks/(nrow(p1t) + extlnks)
-# P[2,2]=nrow(p2t)/(nrow(p2t) + extlnks)
-# P[2,1]=extlnks/(nrow(p2t) + extlnks)
+
+###-----
+library(Matrix)
+print(load(paste0(respath , "hare_" , name,"d1.RData")))
+M1=resourcedistribution
+print(load(paste0(respath , "hare_" , name,"d2.RData")))
+M2=resourcedistribution
+print(load(paste0(respath , "hare_" , name,"d12.RData")))
+M3=resourcedistribution
+
+###-------
+# min||Alpha.M1+(1-Alpha).M2-M3||
+# Alpha=M3_minus_M2/M1_minus_M2
+# I tried to use Sn without scaling (so Sum(Sn)=1).
+# My question is, is the devision element wise or not?
+# If it is not element wise (as I tried) M1_minus_M2=0.
+
+M3_minus_M2=M3
+ix=match(row.names(e2i_d2),row.names(e2i_all))
+M3_minus_M2[ix]=M3_minus_M2[ix]-M2
+
+M1_minus_M2=rep(0,nrow(e2i_all))
+M1_minus_M2[ix]=M1_minus_M2[ix]-M2
+ix1=match(row.names(e2i_d1),row.names(e2i_all))
+M1_minus_M2[ix1]=M1_minus_M2[ix1]+M1
+(AnalAlpha=mean(M3_minus_M2/M1_minus_M2))
+res_rg=approx_rG(tab2,AnalAlpha)
+  tab4=res_rg[[1]]
+  rMSE=res_rg[[2]]
+ (avgRnk=mean(abs(tab4[,'incHareRank']-tab4[,'d12_order'])))
+ (medRnk=median(abs(tab4[,'incHareRank']-tab4[,'d12_order'])))
+
+##########################################################
+# print(load(paste(matpath , "W_" , name ,"d12.RData",sep="")))
+# W_toy2=W
+# print(load(paste(matpath , "F_" , name ,"d12.RData",sep="")))
+# F_toy2=F
+##--------
+
+# print(load(paste(matpath , "W_" , name ,"d1.RData",sep="")))
+# W_p1=W
+# print(load(paste(matpath , "F_" , name ,"d1.RData",sep="")))
+# F_p1=F
+
+# print(load(paste(matpath , "W_" , name ,"d2.RData",sep="")))
+# W_p2=W
+# print(load(paste(matpath , "F_" , name ,"d2.RData",sep="")))
+# F_p2=F
+ce_a=intersect(e2i_d2,e2i_all)#b denominator a: numerator
+M3S1a=M3[match(ce_a,e2i_all)]
+
+M2S1a=M2[match(ce_a,e2i_d2)]
+
+S1a=sum(M3S1a)-sum(M2S1a)#it is not absolute sum
+###------S2a : in M3 but not in M2
+newe=setdiff(e2i_all,e2i_d2)
+S2a=sum(M3[match(newe,e2i_all)])
+### S3a=0
+M3_minus_M2 = S1a + S2a
+
+#####----
+ce=intersect(e2i_d1,e2i_d2)#b denominator a: numerator
+
+M1S1b=M1[match(ce,e2i_d1)]
+
+M2S1b=M2[match(ce,e2i_d2)]
+
+S1b=sum(M1S1b)-sum(M2S1b)
+
+####-----S2b : in M1 but not in M2
+not_2=setdiff(e2i_d1,e2i_d2)
+S2b=sum(M1[match(not_2,e2i_d1)]) 
+
+####-----S3b : in M2 but not in M1
+not_1=setdiff(e2i_d2,e2i_d1)
+S3b=sum(M2[match(not_1,e2i_d2)])
+
+M1_minus_M2=S1b+S2b-S3b
+###------
+
+(Alpha=ifelse(M1_minus_M2==0,0,M3_minus_M2/M1_minus_M2))
+
+# M3_minus_M1/M2_minus_M1
+
+ce_a=intersect(e2i_d1,e2i_all)#b denominator a: numerator
+M3S1a=M3[match(ce_a,e2i_all),]
+M3S1a=M3S1a[,match(ce_a,e2i_all)]
+
+M1S1a=M1[match(ce_a,e2i_d1),]
+M1S1a=M1S1a[,match(ce_a,e2i_d1)]
+
+S1a=sum(M3S1a)-sum(M2S1a)#it is not absolute sum
+###------S2a : in M3 but not in M2
+newe=setdiff(e2i_all,e2i_d2)
+S2a=sum(M3[match(newe,e2i_all),])+sum(M3[,match(newe,e2i_all)])-sum(M3[match(newe,e2i_all),,drop=FALSE][,match(newe,e2i_all)])
+### S3a=0
+M3_minus_M1 = S1a + S2a
+
+###----
+ce=intersect(e2i_d1,e2i_d2)#b denominator a: numerator
+
+M2S1b=M2[match(ce,e2i_d2)]
+M2S1b=M2S1b[match(ce,e2i_d2)]
+
+M1S1b=M1[match(ce,e2i_d1)]
+M1S1b=M1S1b[match(ce,e2i_d1)]
+
+S1b=sum(M2S1b)-sum(M1S1b)
+
+####-----S2b : in M2 but not in M1
+not_1=setdiff(e2i_d2,e2i_d1)
+S2b=sum(M2[match(not_1,e2i_d2)]) 
+####-----S3b : in M1 but not in M2
+not_2=setdiff(e2i_d1,e2i_d2)
+S3b=sum(M1[match(not_2,e2i_d1)])
+
+M2_minus_M1=S1b+S2b-S3b
+###------
+
+(Alpha1=ifelse(M2_minus_M1==0,0,M3_minus_M1/M2_minus_M1))

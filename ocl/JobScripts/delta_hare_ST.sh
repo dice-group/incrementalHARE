@@ -1,9 +1,9 @@
 #!/usr/bin/sh
 
-#CCS -N newjun_hare85
-#CCS --res=rset=1:ncpus=1:mem=280g
-#CCS -t 10h
-#CCS -o wdnewjun_hare85.txt
+#CCS -N delta_hare_st85
+#CCS --res=rset=1:ncpus=1:mem=180g
+#CCS -t 6h
+#CCS -o delta_harest85.txt
 #CCS -M desouki@mail.uni-paderborn.de
 ## specify when to send email: begin , abort,end
 #CCS -meab
@@ -23,5 +23,5 @@ module add r
 #ncpus=1,280g
 #Rscript R/newjun_hare.R
 
-#ncpu=1,280g
-Rscript newjun_calc_ST.R
+#ncpu=1,180g
+Rscript delta_calc_ST.R
