@@ -8,7 +8,7 @@
 
 This project is licensed under the
 GNU Affero General Public License v3.0.
-For the full license text, see [LICENSE](../LICENSE).
+For the full license text, see [LICENSE](LICENSE).
 
 ## Citation
 
