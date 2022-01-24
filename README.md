@@ -2,6 +2,12 @@
 -Calculating HARE for datasets of billions of facts using R.
 -Calculating incremental HARE: an approximation of HARE scores to cobe with revisions of Knowledge Graphs
 
+## License
+
+This project is licensed under the
+GNU Affero General Public License v3.0.
+For the full license text, see [LICENSE](../LICENSE).
+
 ## Citation
 
 DHARE has been accepted by the ACM International Conference on Hypertext and Social Media (HT '19). [The paper](https://papers.dice-research.org/2019/HT_DHARE/dhare_public.pdf) should be cited as follows:
